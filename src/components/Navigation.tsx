@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, Button } from '@mui/material';
+import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 
 const Navigation: React.FC = () => {
@@ -9,12 +9,22 @@ const Navigation: React.FC = () => {
         <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
           Wealth Management
         </Typography>
-        <Button color="inherit" component={RouterLink} to="/">
-          Dashboard
-        </Button>
-        <Button color="inherit" component={RouterLink} to="/entry">
-          Add Entry
-        </Button>
+        <Box>
+          <Button
+            color="inherit"
+            component={RouterLink}
+            to="/dashboard"
+          >
+            Dashboard
+          </Button>
+          <Button
+            color="inherit"
+            component={RouterLink}
+            to="/bulk-entry"
+          >
+            Bulk Entry
+          </Button>
+        </Box>
       </Toolbar>
     </AppBar>
   );

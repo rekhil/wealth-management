@@ -4,14 +4,10 @@ import {
   Paper,
   Typography,
   Grid,
-  Card,
-  CardContent,
   Select,
   MenuItem,
   FormControl,
   InputLabel,
-  Tabs,
-  Tab,
 } from '@mui/material';
 import {
   BarChart,
