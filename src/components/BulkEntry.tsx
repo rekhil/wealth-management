@@ -3,30 +3,23 @@ import {
   Box,
   Paper,
   Typography,
-  Grid,
   TextField,
   Button,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  Grid,
   Table,
   TableBody,
   TableCell,
   TableContainer,
   TableHead,
   TableRow,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
 
 interface WealthEntry {
   date: Date | null;
@@ -67,7 +60,7 @@ const subCategories: { [key: string]: string[] } = {
 };
 
 const BulkEntry: React.FC = () => {
-  const [entries, setEntries] = useState<WealthEntry[]>([]);
+  const [entries] = useState<WealthEntry[]>([]);
   const [entry, setEntry] = useState<WealthEntry>({
     date: new Date(),
     personId: samplePersons[0].id,
@@ -75,12 +68,6 @@ const BulkEntry: React.FC = () => {
     subCategory: subCategories[categories[0]][0],
     amount: 0,
   });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // TODO: Implement save functionality
-    console.log('Bulk entry submitted:', entry);
-  };
 
   const handleAmountChange = (category: string, subCategory: string, value: string) => {
     setEntry(prev => ({
@@ -102,109 +89,102 @@ const BulkEntry: React.FC = () => {
   };
 
   return (
-    <LocalizationProvider dateAdapter={AdapterDateFns}>
+    <Box sx={{ p: 3 }}>
       <Paper elevation={3} sx={{ p: 3 }}>
         <Typography variant="h5" gutterBottom>
           Bulk Wealth Entry
         </Typography>
-        <Box component="form" onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel id="person-select-label">Select Person</InputLabel>
-                <Select
-                  labelId="person-select-label"
-                  value={entry.personId}
-                  label="Select Person"
-                  onChange={(e) => setEntry({ ...entry, personId: e.target.value })}
-                >
-                  {samplePersons.map((person) => (
-                    <MenuItem key={person.id} value={person.id}>
-                      {person.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
                 label="Date"
                 value={entry.date}
-                onChange={(newValue) => setEntry({ ...entry, date: newValue })}
-                slotProps={{ textField: { fullWidth: true } }}
+                onChange={(newValue) => setEntry(prev => ({ ...prev, date: newValue }))}
+                sx={{ width: '100%' }}
               />
-            </Grid>
-            <Grid item xs={12}>
-              <TableContainer component={Paper} variant="outlined">
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Category</TableCell>
-                      <TableCell>Subcategory</TableCell>
-                      <TableCell align="right">Amount</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {categories.map((category) => (
-                      <React.Fragment key={category}>
-                        {subCategories[category].map((subCategory, index) => (
-                          <TableRow key={`${category}-${subCategory}`}>
-                            {index === 0 && (
-                              <TableCell rowSpan={subCategories[category].length}>
-                                {category}
-                              </TableCell>
-                            )}
-                            <TableCell>{subCategory}</TableCell>
-                            <TableCell align="right">
-                              <TextField
-                                type="number"
-                                value={entry.amount}
-                                onChange={(e) => handleAmountChange(category, subCategory, e.target.value)}
-                                size="small"
-                                InputProps={{
-                                  startAdornment: '$',
-                                }}
-                              />
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                        <TableRow>
-                          <TableCell colSpan={2} align="right">
-                            <strong>Total {category}:</strong>
-                          </TableCell>
-                          <TableCell align="right">
-                            <strong>${calculateCategoryTotal(category).toLocaleString()}</strong>
-                          </TableCell>
-                        </TableRow>
-                      </React.Fragment>
-                    ))}
-                    <TableRow>
-                      <TableCell colSpan={2} align="right">
-                        <strong>Grand Total:</strong>
-                      </TableCell>
-                      <TableCell align="right">
-                        <strong>${calculateGrandTotal().toLocaleString()}</strong>
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
-              </TableContainer>
-            </Grid>
-            <Grid item xs={12}>
-              <Button
-                type="submit"
-                variant="contained"
-                color="primary"
-                fullWidth
-                size="large"
-              >
-                Save Bulk Entry
-              </Button>
-            </Grid>
+            </LocalizationProvider>
           </Grid>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth>
+              <InputLabel>Select Person</InputLabel>
+              <Select
+                value={entry.personId}
+                label="Select Person"
+                onChange={(e) => setEntry(prev => ({ ...prev, personId: e.target.value }))}
+              >
+                {samplePersons.map((person) => (
+                  <MenuItem key={person.id} value={person.id}>
+                    {person.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+
+        <TableContainer component={Paper} sx={{ mt: 3 }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell>Category</TableCell>
+                <TableCell>Subcategory</TableCell>
+                <TableCell align="right">Amount</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {categories.map((category) => (
+                <React.Fragment key={category}>
+                  {subCategories[category].map((subCategory, index) => (
+                    <TableRow key={`${category}-${subCategory}`}>
+                      {index === 0 && (
+                        <TableCell rowSpan={subCategories[category].length}>
+                          {category}
+                        </TableCell>
+                      )}
+                      <TableCell>{subCategory}</TableCell>
+                      <TableCell align="right">
+                        <TextField
+                          type="number"
+                          value={entry.amount}
+                          onChange={(e) => handleAmountChange(category, subCategory, e.target.value)}
+                          size="small"
+                          InputProps={{
+                            startAdornment: '$',
+                          }}
+                        />
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow>
+                    <TableCell colSpan={2} align="right">
+                      <strong>Total {category}:</strong>
+                    </TableCell>
+                    <TableCell align="right">
+                      <strong>${calculateCategoryTotal(category).toLocaleString()}</strong>
+                    </TableCell>
+                  </TableRow>
+                </React.Fragment>
+              ))}
+              <TableRow>
+                <TableCell colSpan={2} align="right">
+                  <strong>Grand Total:</strong>
+                </TableCell>
+                <TableCell align="right">
+                  <strong>${calculateGrandTotal().toLocaleString()}</strong>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
+          <Button variant="contained" color="primary">
+            Save Entries
+          </Button>
         </Box>
       </Paper>
-    </LocalizationProvider>
+    </Box>
   );
 };
 
