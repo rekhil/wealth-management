@@ -35,8 +35,8 @@ interface Person {
 }
 
 const samplePersons: Person[] = [
-  { id: '1', name: 'John Doe' },
-  { id: '2', name: 'Jane Smith' },
+  { id: '1', name: 'Rekhil' },
+  { id: '2', name: 'Amritha' },
 ];
 
 const categories = [

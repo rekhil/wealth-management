@@ -8,7 +8,26 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Card,
+  CardContent,
+  Drawer,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText,
+  IconButton,
+  Divider,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
+import {
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  Add as AddIcon,
+  Settings as SettingsIcon,
+  ChevronLeft as ChevronLeftIcon,
+  ChevronRight as ChevronRightIcon,
+} from '@mui/icons-material';
 import {
   BarChart,
   Bar,
@@ -24,6 +43,7 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import BulkEntry from './BulkEntry';
 
 interface WealthData {
   date: string;
@@ -39,8 +59,8 @@ interface Person {
 }
 
 const samplePersons: Person[] = [
-  { id: '1', name: 'John Doe' },
-  { id: '2', name: 'Jane Smith' },
+  { id: '1', name: 'Rekhil' },
+  { id: '2', name: 'Amritha' },
 ];
 
 const sampleData: WealthData[] = [
@@ -171,10 +191,27 @@ const CustomYAxisTick = ({ x, y, payload }: any) => {
   );
 };
 
+const drawerWidth = 240;
+
 const Dashboard: React.FC = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const [open, setOpen] = useState(!isMobile);
   const [selectedPerson, setSelectedPerson] = useState<string>(samplePersons[0].id);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedTimePeriod, setSelectedTimePeriod] = useState<number>(12);
+  const [activeScreen, setActiveScreen] = useState<'dashboard' | 'addEntry'>('dashboard');
+
+  const handleDrawerToggle = () => {
+    setOpen(!open);
+  };
+
+  const handleNavigation = (screen: 'dashboard' | 'addEntry') => {
+    setActiveScreen(screen);
+    if (isMobile) {
+      setOpen(false);
+    }
+  };
 
   const filteredData = sampleData.filter((entry) => entry.personId === selectedPerson);
 
@@ -190,6 +227,8 @@ const Dashboard: React.FC = () => {
     category,
     amount,
   }));
+
+  const netWorth = Object.values(mainCategoryData).reduce((sum, amount) => sum + amount, 0);
 
   // Group data by date for the line chart
   const netWorthData = Object.entries(
@@ -240,194 +279,399 @@ const Dashboard: React.FC = () => {
   }));
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Dashboard
-            </Typography>
-            <Grid container spacing={2} sx={{ mb: 3 }}>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel id="person-select-label">Select Person</InputLabel>
-                  <Select
-                    labelId="person-select-label"
-                    value={selectedPerson}
-                    label="Select Person"
-                    onChange={(e) => setSelectedPerson(e.target.value)}
-                  >
-                    {samplePersons.map((person) => (
-                      <MenuItem key={person.id} value={person.id}>
-                        {person.name}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth>
-                  <InputLabel id="time-period-label">Time Period</InputLabel>
-                  <Select
-                    labelId="time-period-label"
-                    value={selectedTimePeriod}
-                    label="Time Period"
-                    onChange={(e) => setSelectedTimePeriod(e.target.value as number)}
-                  >
-                    {timePeriods.map((period) => (
-                      <MenuItem key={period.value} value={period.value}>
-                        {period.label}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
+    <Box sx={{ display: 'flex', minHeight: '100vh' }}>
+      {/* Sidebar */}
+      <Drawer
+        variant={isMobile ? "temporary" : "permanent"}
+        open={open}
+        onClose={handleDrawerToggle}
+        sx={{
+          '& .MuiDrawer-paper': {
+            width: drawerWidth,
+            boxSizing: 'border-box',
+            transition: theme.transitions.create(['width', 'margin'], {
+              easing: theme.transitions.easing.sharp,
+              duration: theme.transitions.duration.leavingScreen,
+            }),
+            ...(!open && {
+              width: theme.spacing(7),
+              overflowX: 'hidden',
+              transition: theme.transitions.create(['width', 'margin'], {
+                easing: theme.transitions.easing.sharp,
+                duration: theme.transitions.duration.enteringScreen,
+              }),
+            }),
+            display: 'flex',
+            flexDirection: 'column',
+          },
+        }}
+      >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2 }}>
+          <Typography variant="h6" noWrap component="div" sx={{ display: open ? 'block' : 'none' }}>
+            Wealth Manager
+          </Typography>
+          <IconButton onClick={handleDrawerToggle}>
+            {open ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+          </IconButton>
+        </Box>
+        <Divider />
+        <List>
+          <ListItem 
+            button 
+            onClick={() => handleNavigation('dashboard')}
+            selected={activeScreen === 'dashboard'}
+          >
+            <ListItemIcon>
+              <DashboardIcon />
+            </ListItemIcon>
+            <ListItemText primary="Dashboard" sx={{ display: open ? 'block' : 'none' }} />
+          </ListItem>
+          <ListItem 
+            button 
+            onClick={() => handleNavigation('addEntry')}
+            selected={activeScreen === 'addEntry'}
+          >
+            <ListItemIcon>
+              <AddIcon />
+            </ListItemIcon>
+            <ListItemText primary="Add Entry" sx={{ display: open ? 'block' : 'none' }} />
+          </ListItem>
+          <ListItem button>
+            <ListItemIcon>
+              <SettingsIcon />
+            </ListItemIcon>
+            <ListItemText primary="Settings" sx={{ display: open ? 'block' : 'none' }} />
+          </ListItem>
+        </List>
+        <Box 
+          sx={{ 
+            mt: 'auto', 
+            p: 2,
+            borderTop: 1,
+            borderColor: 'divider',
+            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.02)',
+          }}
+        >
+          <FormControl 
+            fullWidth 
+            sx={{ 
+              '& .MuiInputLabel-root': {
+                color: theme.palette.text.primary,
+                '&.Mui-focused': {
+                  color: theme.palette.primary.main,
+                },
+              },
+              '& .MuiOutlinedInput-root': {
+                '& fieldset': {
+                  borderColor: theme.palette.divider,
+                },
+                '&:hover fieldset': {
+                  borderColor: theme.palette.primary.main,
+                },
+                '&.Mui-focused fieldset': {
+                  borderColor: theme.palette.primary.main,
+                },
+              },
+              '& .MuiSelect-select': {
+                display: 'flex',
+                alignItems: 'center',
+                py: 1,
+              },
+            }}
+          >
+            <InputLabel 
+              id="person-select-label" 
+              sx={{ 
+                display: open ? 'block' : 'none',
+                transform: 'translate(14px, 8px) scale(1)',
+                '&.Mui-focused, &.MuiFormLabel-filled': {
+                  transform: 'translate(14px, -9px) scale(0.75)',
+                },
+              }}
+            >
+              Select Person
+            </InputLabel>
+            <Select
+              labelId="person-select-label"
+              value={selectedPerson}
+              onChange={(e) => setSelectedPerson(e.target.value)}
+              label={open ? "Select Person" : ""}
+              sx={{
+                '& .MuiSelect-icon': {
+                  color: theme.palette.text.primary,
+                },
+              }}
+            >
+              {samplePersons.map((person) => (
+                <MenuItem 
+                  key={person.id} 
+                  value={person.id}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    py: 1,
+                  }}
+                >
+                  <Typography variant="body2">{person.name}</Typography>
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+      </Drawer>
+
+      {/* Main Content */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          p: 3,
+          width: { 
+            sm: `calc(100% - ${open ? drawerWidth : theme.spacing(7)}px)`,
+            xs: '100%'
+          },
+          ml: { sm: open ? `${drawerWidth}px` : `${theme.spacing(7)}px` },
+          transition: theme.transitions.create(['width', 'margin'], {
+            easing: theme.transitions.easing.sharp,
+            duration: theme.transitions.duration.leavingScreen,
+          }),
+          overflow: 'auto',
+          height: '100vh',
+        }}
+      >
+        {isMobile && (
+          <IconButton
+            color="inherit"
+            aria-label="open drawer"
+            edge="start"
+            onClick={handleDrawerToggle}
+            sx={{ mb: 2 }}
+          >
+            <MenuIcon />
+          </IconButton>
+        )}
+
+        {activeScreen === 'dashboard' ? (
+          <Grid container spacing={3}>
+            {/* Summary Card */}
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={6}>
+                      <Typography variant="h4" gutterBottom>
+                        Net Worth Summary
+                      </Typography>
+                      <Typography variant="h3" color="primary" gutterBottom>
+                        ${formatNumber(netWorth)}
+                      </Typography>
+                      <Typography variant="body1" color="text.secondary">
+                        As of {new Date().toLocaleDateString()}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Box sx={{ height: 300 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={pieChartData}
+                              cx="50%"
+                              cy="50%"
+                              labelLine={false}
+                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                              outerRadius={80}
+                              fill="#8884d8"
+                              dataKey="value"
+                            >
+                              {pieChartData.map((entry, index) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip 
+                              content={<CustomTooltip />}
+                              formatter={(value: number) => `$${formatNumber(value)}`}
+                            />
+                            <Legend />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </Card>
             </Grid>
-            <Typography variant="h6" gutterBottom>
-              Net Worth Over Time
-            </Typography>
-            <Box sx={{ height: 300 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={filteredNetWorthData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="date" 
-                    tick={{ fill: '#666' }}
-                    tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
-                  />
-                  <YAxis 
-                    tick={<CustomYAxisTick />}
-                    interval="preserveStartEnd"
-                    domain={['auto', 'auto']}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="amount"
-                    stroke="#8884d8"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                    activeDot={{ r: 6 }}
-                    name="Net Worth"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </Box>
-          </Paper>
-        </Grid>
-        <Grid item xs={12}>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Wealth Distribution by Category
-            </Typography>
-            <Box sx={{ height: 300 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis 
-                    dataKey="category" 
-                    tick={{ fill: '#666' }}
-                  />
-                  <YAxis 
-                    tick={<CustomYAxisTick />}
-                    interval="preserveStartEnd"
-                    domain={['auto', 'auto']}
-                  />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend />
-                  <Bar 
-                    dataKey="amount" 
-                    fill="#8884d8" 
-                    name="Amount"
-                    radius={[4, 4, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Category Distribution
-            </Typography>
-            <Box sx={{ height: 300 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieChartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
+
+            {/* Person Selection */}
+            <Grid item xs={12}>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={12} sm={6}>
+                    <FormControl fullWidth>
+                      <InputLabel id="time-period-label">Time Period</InputLabel>
+                      <Select
+                        labelId="time-period-label"
+                        value={selectedTimePeriod}
+                        label="Time Period"
+                        onChange={(e) => setSelectedTimePeriod(e.target.value as number)}
+                      >
+                        {timePeriods.map((period) => (
+                          <MenuItem key={period.value} value={period.value}>
+                            {period.label}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                </Grid>
+                <Typography variant="h6" gutterBottom>
+                  Net Worth Over Time
+                </Typography>
+                <Box sx={{ height: 300 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={filteredNetWorthData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis 
+                        dataKey="date" 
+                        tick={{ fill: '#666' }}
+                        tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', year: '2-digit' })}
+                      />
+                      <YAxis 
+                        tick={<CustomYAxisTick />}
+                        interval="preserveStartEnd"
+                        domain={['auto', 'auto']}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Line
+                        type="monotone"
+                        dataKey="amount"
+                        stroke="#8884d8"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                        name="Net Worth"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Paper>
+            </Grid>
+            <Grid item xs={12}>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Wealth Distribution by Category
+                </Typography>
+                <Box sx={{ height: 300 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                      <XAxis 
+                        dataKey="category" 
+                        tick={{ fill: '#666' }}
+                      />
+                      <YAxis 
+                        tick={<CustomYAxisTick />}
+                        interval="preserveStartEnd"
+                        domain={['auto', 'auto']}
+                      />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Legend />
+                      <Bar 
+                        dataKey="amount" 
+                        fill="#8884d8" 
+                        name="Amount"
+                        radius={[4, 4, 0, 0]}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Category Distribution
+                </Typography>
+                <Box sx={{ height: 300 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieChartData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {pieChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        content={<CustomTooltip />}
+                        formatter={(value: number) => `$${formatNumber(value)}`}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Paper elevation={3} sx={{ p: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Subcategory Distribution
+                </Typography>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel id="category-select-label">Select Category</InputLabel>
+                  <Select
+                    labelId="category-select-label"
+                    value={selectedCategory}
+                    label="Select Category"
+                    onChange={(e) => setSelectedCategory(e.target.value)}
                   >
-                    {pieChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <MenuItem value="">All Categories</MenuItem>
+                    {Object.keys(mainCategoryData).map((category) => (
+                      <MenuItem key={category} value={category}>
+                        {category}
+                      </MenuItem>
                     ))}
-                  </Pie>
-                  <Tooltip 
-                    content={<CustomTooltip />}
-                    formatter={(value: number) => `$${formatNumber(value)}`}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </Box>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper elevation={3} sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Subcategory Distribution
-            </Typography>
-            <FormControl fullWidth sx={{ mb: 2 }}>
-              <InputLabel id="category-select-label">Select Category</InputLabel>
-              <Select
-                labelId="category-select-label"
-                value={selectedCategory}
-                label="Select Category"
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <MenuItem value="">All Categories</MenuItem>
-                {Object.keys(mainCategoryData).map((category) => (
-                  <MenuItem key={category} value={category}>
-                    {category}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <Box sx={{ height: 300 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={subCategoryPieData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {subCategoryPieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip 
-                    content={<CustomTooltip />}
-                    formatter={(value: number) => `$${formatNumber(value)}`}
-                  />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </Box>
-          </Paper>
-        </Grid>
-      </Grid>
+                  </Select>
+                </FormControl>
+                <Box sx={{ height: 300 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={subCategoryPieData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="value"
+                      >
+                        {subCategoryPieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        content={<CustomTooltip />}
+                        formatter={(value: number) => `$${formatNumber(value)}`}
+                      />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Paper>
+            </Grid>
+          </Grid>
+        ) : (
+          <BulkEntry />
+        )}
+      </Box>
     </Box>
   );
 };
