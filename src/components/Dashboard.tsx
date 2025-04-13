@@ -129,12 +129,14 @@ const timePeriods = [
 
 // Format number to K or M format with decimal places
 const formatNumber = (value: number) => {
-  if (value >= 1000000) {
-    return `${(value / 1000000).toFixed(2)}M`;
+  if (value >= 10000000) {
+    return `₹${(value / 10000000).toFixed(2)}Cr`;
+  } else if (value >= 100000) {
+    return `₹${(value / 100000).toFixed(2)}L`;
   } else if (value >= 1000) {
-    return `${(value / 1000).toFixed(1)}K`;
+    return `₹${(value / 1000).toFixed(1)}K`;
   }
-  return value.toFixed(0);
+  return `₹${value.toFixed(0)}`;
 };
 
 // Custom tooltip formatter with improved styling
@@ -164,7 +166,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             }}
           >
             <span>{entry.name}:</span>
-            <span>${formatNumber(entry.value)}</span>
+            <span>{formatNumber(entry.value)}</span>
           </Typography>
         ))}
       </Paper>
@@ -185,7 +187,7 @@ const CustomYAxisTick = ({ x, y, payload }: any) => {
         fill="#666"
         style={{ fontSize: '12px' }}
       >
-        ${formatNumber(payload.value)}
+        {formatNumber(payload.value)}
       </text>
     </g>
   );
@@ -278,6 +280,15 @@ const Dashboard: React.FC = () => {
     value: amount,
   }));
 
+  // Calculate total assets and liabilities
+  const totalAssets = Object.entries(mainCategoryData)
+    .filter(([category]) => !category.includes('Debt') && !category.includes('Loan'))
+    .reduce((sum, [_, amount]) => sum + amount, 0);
+
+  const totalLiabilities = Object.entries(mainCategoryData)
+    .filter(([category]) => category.includes('Debt') || category.includes('Loan'))
+    .reduce((sum, [_, amount]) => sum + amount, 0);
+
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh' }}>
       {/* Sidebar */}
@@ -334,7 +345,7 @@ const Dashboard: React.FC = () => {
             <ListItemIcon>
               <AddIcon />
             </ListItemIcon>
-            <ListItemText primary="Add Entry" sx={{ display: open ? 'block' : 'none' }} />
+            <ListItemText primary="Add Wealth Entry" sx={{ display: open ? 'block' : 'none' }} />
           </ListItem>
           <ListItem button>
             <ListItemIcon>
@@ -458,42 +469,43 @@ const Dashboard: React.FC = () => {
               <Card>
                 <CardContent>
                   <Grid container spacing={3}>
-                    <Grid item xs={12} md={6}>
-                      <Typography variant="h4" gutterBottom>
-                        Net Worth Summary
-                      </Typography>
-                      <Typography variant="h3" color="primary" gutterBottom>
-                        ${formatNumber(netWorth)}
-                      </Typography>
-                      <Typography variant="body1" color="text.secondary">
-                        As of {new Date().toLocaleDateString()}
-                      </Typography>
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ textAlign: 'center', p: 2 }}>
+                        <Typography variant="h6" color="text.secondary" gutterBottom>
+                          Net Worth
+                        </Typography>
+                        <Typography variant="h4" color="primary" gutterBottom>
+                          {formatNumber(netWorth)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          As of {new Date().toLocaleDateString()}
+                        </Typography>
+                      </Box>
                     </Grid>
-                    <Grid item xs={12} md={6}>
-                      <Box sx={{ height: 300 }}>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={pieChartData}
-                              cx="50%"
-                              cy="50%"
-                              labelLine={false}
-                              label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(1)}%`}
-                              outerRadius={80}
-                              fill="#8884d8"
-                              dataKey="value"
-                            >
-                              {pieChartData.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                              ))}
-                            </Pie>
-                            <Tooltip 
-                              content={<CustomTooltip />}
-                              formatter={(value: number) => `$${formatNumber(value)}`}
-                            />
-                            <Legend />
-                          </PieChart>
-                        </ResponsiveContainer>
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ textAlign: 'center', p: 2, borderLeft: 1, borderRight: 1, borderColor: 'divider' }}>
+                        <Typography variant="h6" color="text.secondary" gutterBottom>
+                          Total Assets
+                        </Typography>
+                        <Typography variant="h4" color="success.main" gutterBottom>
+                          {formatNumber(totalAssets)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          All Investments & Savings
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} md={4}>
+                      <Box sx={{ textAlign: 'center', p: 2 }}>
+                        <Typography variant="h6" color="text.secondary" gutterBottom>
+                          Total Liabilities
+                        </Typography>
+                        <Typography variant="h4" color="error.main" gutterBottom>
+                          {formatNumber(totalLiabilities)}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          All Debts & Loans
+                        </Typography>
                       </Box>
                     </Grid>
                   </Grid>
@@ -611,7 +623,7 @@ const Dashboard: React.FC = () => {
                       </Pie>
                       <Tooltip 
                         content={<CustomTooltip />}
-                        formatter={(value: number) => `$${formatNumber(value)}`}
+                        formatter={(value: number) => `${formatNumber(value)}`}
                       />
                       <Legend />
                     </PieChart>
@@ -659,7 +671,7 @@ const Dashboard: React.FC = () => {
                       </Pie>
                       <Tooltip 
                         content={<CustomTooltip />}
-                        formatter={(value: number) => `$${formatNumber(value)}`}
+                        formatter={(value: number) => `${formatNumber(value)}`}
                       />
                       <Legend />
                     </PieChart>
